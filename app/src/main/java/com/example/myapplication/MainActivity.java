@@ -1,75 +1,79 @@
 package com.example.myapplication;
 
-import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Patterns;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText editTextName, editTextEmail, editTextPhone;
-    Button buttonSubmit;
+    private EditText etEmail, etPassword;
+    private Button btnSubmitForm;
+    private TextView tvFormValidationResult;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        editTextName = findViewById(R.id.editTextName);
-        editTextEmail = findViewById(R.id.editTextEmail);
-        editTextPhone = findViewById(R.id.editTextPhone);
-        buttonSubmit = findViewById(R.id.buttonSubmit);
+        etEmail = findViewById(R.id.etEmail);
+        etPassword = findViewById(R.id.etPassword);
+        btnSubmitForm = findViewById(R.id.btnSubmitForm);
+        tvFormValidationResult = findViewById(R.id.tvFormValidationResult);
 
-        buttonSubmit.setOnClickListener(new View.OnClickListener() {
+        // Add TextWatcher to email field to validate in real-time
+        etEmail.addTextChangedListener(new TextWatcher() {
             @Override
-            public void onClick(View v) {
-                if (validateForm()) {
-                    Toast.makeText(MainActivity.this, "Form is valid", Toast.LENGTH_SHORT).show();
-                }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                validateEmail();
+            }
+        });
+
+        // Handle form submission
+        btnSubmitForm.setOnClickListener(v -> {
+            if (validateEmail() && validatePassword()) {
+                tvFormValidationResult.setText("Form is valid!");
+                Toast.makeText(this, "Form submitted successfully!", Toast.LENGTH_SHORT).show();
+            } else {
+                tvFormValidationResult.setText("Form is invalid. Please check the fields.");
             }
         });
     }
 
-    private boolean validateForm() {
-        String name = editTextName.getText().toString().trim();
-        String email = editTextEmail.getText().toString().trim();
-        String phone = editTextPhone.getText().toString().trim();
-
-        if (TextUtils.isEmpty(name)) {
-            editTextName.setError("Name is required");
+    private boolean validateEmail() {
+        String email = etEmail.getText().toString().trim();
+        if (email.isEmpty()) {
+            etEmail.setError("Email is required");
             return false;
-        }
-
-        if (!isValidEmail(email)) {
-            editTextEmail.setError("Invalid email address");
+        } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            etEmail.setError("Invalid email address");
             return false;
+        } else {
+            etEmail.setError(null);
+            return true;
         }
-
-        if (!isValidPhone(phone)) {
-            editTextPhone.setError("Invalid phone number");
-            return false;
-        }
-
-        return true;
     }
 
-
-    private boolean isValidEmail(String email) {
-        String emailPattern = "^[a-zA-Z0-9._-]+@[a-z]+\\.+[a-z]+$";
-        Pattern pattern = Pattern.compile(emailPattern);
-        Matcher matcher = pattern.matcher(email);
-        return matcher.matches();
-    }
-
-    private boolean isValidPhone(String phone) {
-        String phonePattern = "^[0-9]{10}$";
-        Pattern pattern = Pattern.compile(phonePattern);
-        Matcher matcher = pattern.matcher(phone);
-        return matcher.matches();
+    private boolean validatePassword() {
+        String password = etPassword.getText().toString().trim();
+        if (password.isEmpty()) {
+            etPassword.setError("Password is required");
+            return false;
+        } else {
+            etPassword.setError(null);
+            return true;
+        }
     }
 }
